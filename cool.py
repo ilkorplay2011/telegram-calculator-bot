@@ -1,6 +1,9 @@
 import telebot
+import os
 from simpleeval import simple_eval
-TOKEN = '8563975591:AAHN_OmAo90T3YXIXptCi29eysPIEsgOX2o'
+from dotenv import load_dotenv
+load_dotenv()
+TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 def calculate(a, b, oper):
