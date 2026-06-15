@@ -7,11 +7,12 @@ load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 user_data = {}
+user_screen = {}
 
 def get_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
     row1 = [telebot.types.KeyboardButton("C"), telebot.types.KeyboardButton("7"), telebot.types.KeyboardButton("8"), telebot.types.KeyboardButton("9"), telebot.types.KeyboardButton("÷")]
-    row2 = [telebot.types.KeyboardButton("4"), telebot.types.KeyboardButton("5"), telebot.types.KeyboardButton("6"), telebot.types.KeyboardButton("×"), telebot.types.KeyboardButton("k")]
+    row2 = [telebot.types.KeyboardButton("4"), telebot.types.KeyboardButton("5"), telebot.types.KeyboardButton("6"), telebot.types.KeyboardButton("×"), telebot.types.KeyboardButton("k"), telebot.types.KeyboardButton("⌫")]
     row3 = [telebot.types.KeyboardButton("1"), telebot.types.KeyboardButton("2"), telebot.types.KeyboardButton("3"), telebot.types.KeyboardButton("-"), telebot.types.KeyboardButton("m"), telebot.types.KeyboardButton("+/-")]
     row4 = [telebot.types.KeyboardButton("0"), telebot.types.KeyboardButton(","), telebot.types.KeyboardButton("^"), telebot.types.KeyboardButton("="), telebot.types.KeyboardButton("+"),telebot.types.KeyboardButton("b")]
     keyboard.add(*row1)
@@ -29,6 +30,21 @@ def normalize(expr):
     expr = re.sub(r"(\d+)m", r"(\1*1000000)", expr)
     expr = re.sub(r"(\d+)b", r"(\1*1000000000)", expr)
     return expr
+
+def show_screen(user_id, chat_id):
+    expr = user_data.get(user_id, "")
+    text = f"🧮 {expr if expr else '0'}"
+
+    if user_id in user_screen:
+        old_chat_id, old_msg_id = user_screen[user_id]
+        try:
+            bot.delete_message(old_chat_id, old_msg_id)
+        except:
+            pass
+
+    msg = bot.send_message(chat_id, text)
+
+    user_screen[user_id] = (chat_id, msg.message_id)
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -49,9 +65,17 @@ def calculator(message):
     if user_id not in user_data:
         user_data[user_id] = ""
 
+    if text == "⌫":
+        if user_data[user_id]:
+            user_data[user_id] = user_data[user_id][:-1]
+            bot.send_message(user_id,'⌫ удалено')
+            show_screen(user_id, message.chat.id)
+        return
+
     if text == 'C':
         user_data[user_id] = ""
-        bot.send_message(user_id, "Очищено")
+        bot.send_message(user_id, "🧹 Очищено")
+        show_screen(user_id, message.chat.id)
         return
 
     if text == "+/-":
@@ -60,11 +84,13 @@ def calculator(message):
                 user_data[user_id] = user_data[user_id][1:]
             else:
                 user_data[user_id] = "-" + user_data[user_id]
+        show_screen(user_id, message.chat.id)
         return
 
     if text in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
                 "+", "-", "×", "÷", ",", "^",'k','m','b']:
         user_data[user_id] += text
+        show_screen(user_id, message.chat.id)
         return
 
     if text == "=":
@@ -72,7 +98,7 @@ def calculator(message):
             expr = user_data[user_id]
             expr = normalize(expr)
             result = simple_eval(expr)
-            bot.send_message(user_id, f"Ответ: {result}")
+            bot.send_message(user_id, f"🧮 Ответ: {result}")
             user_data[user_id] = ""
 
         except ZeroDivisionError:
@@ -97,7 +123,7 @@ def calculator(message):
 
         result = simple_eval(expr)
 
-        bot.send_message(user_id, f"Ответ: {result}")
+        bot.send_message(user_id, f"🧮 Ответ: {result}")
 
     except ZeroDivisionError:
         bot.send_message(user_id, "Ошибка деления на ноль")

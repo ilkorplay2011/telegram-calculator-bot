@@ -1,12 +1,16 @@
-# PyCharm
-.idea/
-
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# virtual environment
+# virtual env
 venv/
-
-# environment variables
 .env
+
+# IDE
+.idea/
+.vscode/
+
+# system
+.DS_Store
