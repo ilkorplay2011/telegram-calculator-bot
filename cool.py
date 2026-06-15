@@ -2,6 +2,7 @@ import telebot
 import os
 from simpleeval import simple_eval
 from dotenv import load_dotenv
+import re
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
@@ -9,15 +10,25 @@ user_data = {}
 
 def get_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    row1 = [telebot.types.KeyboardButton("C"),telebot.types.KeyboardButton("7"), telebot.types.KeyboardButton("8"), telebot.types.KeyboardButton("9"), telebot.types.KeyboardButton("÷")]
-    row2 = [telebot.types.KeyboardButton("4"), telebot.types.KeyboardButton("5"), telebot.types.KeyboardButton("6"), telebot.types.KeyboardButton("×")]
-    row3 = [telebot.types.KeyboardButton("1"), telebot.types.KeyboardButton("2"), telebot.types.KeyboardButton("3"), telebot.types.KeyboardButton("-")]
+    row1 = [telebot.types.KeyboardButton("C"), telebot.types.KeyboardButton("7"), telebot.types.KeyboardButton("8"), telebot.types.KeyboardButton("9"), telebot.types.KeyboardButton("÷")]
+    row2 = [telebot.types.KeyboardButton("4"), telebot.types.KeyboardButton("5"), telebot.types.KeyboardButton("6"), telebot.types.KeyboardButton("×"), telebot.types.KeyboardButton("k")]
+    row3 = [telebot.types.KeyboardButton("1"), telebot.types.KeyboardButton("2"), telebot.types.KeyboardButton("3"), telebot.types.KeyboardButton("-"), telebot.types.KeyboardButton("m"), telebot.types.KeyboardButton("+/-")]
     row4 = [telebot.types.KeyboardButton("0"), telebot.types.KeyboardButton(","), telebot.types.KeyboardButton("^"), telebot.types.KeyboardButton("="), telebot.types.KeyboardButton("+")]
     keyboard.add(*row1)
     keyboard.add(*row2)
     keyboard.add(*row3)
     keyboard.add(*row4)
     return keyboard
+
+def normalize(expr):
+    expr = expr.replace("×", "*")
+    expr = expr.replace("÷", "/")
+    expr = expr.replace(",", ".")
+    expr = expr.replace("^", "**")
+    expr = re.sub(r"(\d+)k", r"(\1*1000)", expr)
+    expr = re.sub(r"(\d+)m", r"(\1*1000000)", expr)
+    expr = re.sub(r"(\d+)b", r"(\1*1000000000)", expr)
+    return expr
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -42,25 +53,25 @@ def calculator(message):
         user_data[user_id] = ""
         bot.send_message(user_id, "Очищено")
         return
+    
+    if text == "+/-":
+        if user_data[user_id].startswith("-"):
+            user_data[user_id] = user_data[user_id][1:]
+        else:
+            user_data[user_id] = "-" + user_data[user_id]
+        return
 
     if text in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                "+", "-", "×", "÷", ",", "^"]:
+                "+", "-", "×", "÷", ",", "^",'k','m']:
         user_data[user_id] += text
         return
 
     if text == "=":
         try:
             expr = user_data[user_id]
-
-            expr = expr.replace("×", "*")
-            expr = expr.replace("÷", "/")
-            expr = expr.replace(",", ".")
-            expr = expr.replace("^", "**")
-
+            expr = normalize(expr)
             result = simple_eval(expr)
-
             bot.send_message(user_id, f"Ответ: {result}")
-
             user_data[user_id] = ""
 
         except ZeroDivisionError:
@@ -79,11 +90,7 @@ def calculator(message):
     try:
         expr = text
         user_data[user_id] = ""
-        expr = expr.replace("×", "*")
-        expr = expr.replace("÷", "/")
-        expr = expr.replace(",", ".")
-        expr = expr.replace("^", "**")
-
+        expr = normalize(expr)
         if expr.startswith(","):
             expr = "0" + expr
 
