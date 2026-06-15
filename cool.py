@@ -26,6 +26,11 @@ def normalize(expr):
     expr = expr.replace("÷", "/")
     expr = expr.replace(",", ".")
     expr = expr.replace("^", "**")
+    expr = re.sub(r"\+\+", "+", expr)
+    expr = re.sub(r"--", "+", expr)
+    expr = re.sub(r"\+\-", "-", expr)
+    expr = re.sub(r"-\+", "-", expr)
+    expr = re.sub(r"^[\+\×\÷]", "", expr)
     expr = re.sub(r"(\d+)k", r"(\1*1000)", expr)
     expr = re.sub(r"(\d+)m", r"(\1*1000000)", expr)
     expr = re.sub(r"(\d+)b", r"(\1*1000000000)", expr)
@@ -66,15 +71,15 @@ def calculator(message):
         user_data[user_id] = ""
 
     if text == "⌫":
-        if user_data[user_id]:
-            user_data[user_id] = user_data[user_id][:-1]
-            bot.send_message(user_id,'⌫ удалено')
-            show_screen(user_id, message.chat.id)
+        expr = user_data.get(user_id, "")
+        if expr:
+            user_data[user_id] = expr[:-1]
+        show_screen(user_id, message.chat.id)
         return
 
     if text == 'C':
         user_data[user_id] = ""
-        bot.send_message(user_id, "🧹 Очищено")
+        bot.send_message(message.chat.id, "🧹 очищено")
         show_screen(user_id, message.chat.id)
         return
 
@@ -95,11 +100,16 @@ def calculator(message):
 
     if text == "=":
         try:
-            expr = user_data[user_id]
+            expr = user_data.get(user_id, "")
+
+            if not expr:
+                bot.send_message(user_id, "Пустое выражение")
+                return
             expr = normalize(expr)
             result = simple_eval(expr)
             bot.send_message(user_id, f"🧮 Ответ: {result}")
             user_data[user_id] = ""
+            show_screen(user_id, message.chat.id)
 
         except ZeroDivisionError:
             bot.send_message(
@@ -115,9 +125,11 @@ def calculator(message):
         return
 
     try:
-        expr = text
+        expr = normalize(text)
+        if not re.search(r"\d", expr):
+            bot.send_message(user_id, "❌ неверное выражение")
+            return
         user_data[user_id] = ""
-        expr = normalize(expr)
         if expr.startswith(","):
             expr = "0" + expr
 
