@@ -9,7 +9,7 @@ user_data = {}
 
 def get_keyboard():
     keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    row1 = [telebot.types.KeyboardButton("7"), telebot.types.KeyboardButton("8"), telebot.types.KeyboardButton("9"), telebot.types.KeyboardButton("÷")]
+    row1 = [telebot.types.KeyboardButton("C"),telebot.types.KeyboardButton("7"), telebot.types.KeyboardButton("8"), telebot.types.KeyboardButton("9"), telebot.types.KeyboardButton("÷")]
     row2 = [telebot.types.KeyboardButton("4"), telebot.types.KeyboardButton("5"), telebot.types.KeyboardButton("6"), telebot.types.KeyboardButton("×")]
     row3 = [telebot.types.KeyboardButton("1"), telebot.types.KeyboardButton("2"), telebot.types.KeyboardButton("3"), telebot.types.KeyboardButton("-")]
     row4 = [telebot.types.KeyboardButton("0"), telebot.types.KeyboardButton(","), telebot.types.KeyboardButton("^"), telebot.types.KeyboardButton("="), telebot.types.KeyboardButton("+")]
@@ -21,11 +21,15 @@ def get_keyboard():
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id,'добро пожаловать на бот калькулятор',reply_markup = get_keyboard())
+    bot.send_message(message.chat.id,'добро пожаловать на бот калькулятор введите /calc чтобы открыть клавиатуру калькулятора\nили /help для помощи')
 
 @bot.message_handler(commands=['calc'])
 def calc_command(message):
-    bot.send_message(message.chat.id,'пример: 4+7')
+    bot.send_message(message.chat.id,'экранная клавиатура',reply_markup = get_keyboard())
+
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    bot.send_message(message.chat.id,'вы можете начать работу либо с спомощью кнопок на экране,\nлибо самостоятельно набрав выражение пример:8+9^6')
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def calculator(message):
@@ -33,6 +37,11 @@ def calculator(message):
     text = message.text
     if user_id not in user_data:
         user_data[user_id] = ""
+
+    if text == 'C':
+        user_data[user_id] = ""
+        bot.send_message(user_id, "Очищено")
+        return
 
     if text in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
                 "+", "-", "×", "÷", ",", "^"]:
