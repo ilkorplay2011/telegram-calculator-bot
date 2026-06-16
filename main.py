@@ -40,7 +40,7 @@ def calc_command(message):
 
 @bot.message_handler(commands=['help'])
 def help_command(message):
-    bot.send_message(message.chat.id,'вы можете начать работу либо с помощью кнопок на экране,\nлибо самостоятельно набрав выражение пример:8+9^6')
+    bot.send_message(message.chat.id,'вы можете начать работу либо с помощью кнопок на экране')
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def calculator(message):
