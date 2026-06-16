@@ -1,26 +1,19 @@
+from unittest import result
+
 import telebot
 import os
 import re
 from dotenv import load_dotenv
 from calculator.normalize import normalize
-from calculator.engine import calculate
 from bot.keyboard import get_keyboard
+from calculator.engine import check_brackets
+from calculator.engine import prepare
+from calculator.engine import calculate
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 user_data = {}
 user_screen = {}
-
-def check_brackets(expr):
-    stack = []
-    for c in expr:
-        if c == "(":
-            stack.append(c)
-        elif c == ")":
-            if not stack:
-                return False
-            stack.pop()
-    return len(stack) == 0
 
 def show_screen(user_id, chat_id):
     expr = user_data.get(user_id, "")
@@ -88,19 +81,18 @@ def calculator(message):
         try:
             expr = user_data.get(user_id, "")
 
-            open_b = expr.count("(")
-            close_b = expr.count(")")
-
-            if open_b > close_b:
-                expr += ")" * (open_b - close_b)
-            if not check_brackets(expr):
-                bot.send_message(user_id, "скобки не сбалансированы")
-                return
             if not expr:
                 bot.send_message(user_id, "Пустое выражение")
                 return
-            expr = normalize(expr)
+
+            expr = prepare(expr)
+
+            if expr is None:
+                bot.send_message(user_id, "ошибка выражения")
+                return
+
             result = calculate(expr)
+
             bot.send_message(user_id, f"🧮 Ответ: {result}")
             user_data[user_id] = ""
             show_screen(user_id, message.chat.id)
@@ -117,36 +109,4 @@ def calculator(message):
             )
 
         return
-
-    try:
-        expr = normalize(text)
-        if not re.search(r"\d", expr):
-            bot.send_message(user_id, "❌ неверное выражение")
-            show_screen(user_id, message.chat.id)
-            return
-        open_b = expr.count("(")
-        close_b = expr.count(")")
-
-        if open_b > close_b:
-            expr += ")" * (open_b - close_b)
-
-        if not check_brackets(expr):
-            bot.send_message(user_id, "скобки не сбалансированы")
-            return
-
-        user_data[user_id] = ""
-        if expr.startswith(","):
-            expr = "0" + expr
-
-        result = calculate(expr)
-
-        bot.send_message(user_id, f"🧮 Ответ: {result}")
-
-    except ZeroDivisionError:
-        bot.send_message(user_id, "Ошибка деления на ноль")
-
-    except Exception:
-        bot.send_message(user_id, "Ошибка")
-
-
-bot.polling()
+bot.infinity_polling()
