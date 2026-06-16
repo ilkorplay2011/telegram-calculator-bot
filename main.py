@@ -124,6 +124,11 @@ def calculator(message):
             bot.send_message(user_id, "❌ неверное выражение")
             show_screen(user_id, message.chat.id)
             return
+        open_b = expr.count("(")
+        close_b = expr.count(")")
+
+        if open_b > close_b:
+            expr += ")" * (open_b - close_b)
 
         if not check_brackets(expr):
             bot.send_message(user_id, "скобки не сбалансированы")
