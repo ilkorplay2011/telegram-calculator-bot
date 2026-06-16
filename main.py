@@ -2,6 +2,7 @@ import telebot
 import os
 from dotenv import load_dotenv
 from calculator.normalize import normalize
+import re
 from calculator.engine import calculate
 from bot.keyboard import get_keyboard
 load_dotenv()
