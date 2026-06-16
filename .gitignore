@@ -3,9 +3,10 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-__init__.py
+
 # virtual env
 venv/
+.venv/
 .env
 
 # IDE
@@ -14,3 +15,6 @@ venv/
 
 # system
 .DS_Store
+
+# logs
+*.log

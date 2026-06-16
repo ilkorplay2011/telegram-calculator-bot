@@ -88,6 +88,11 @@ def calculator(message):
         try:
             expr = user_data.get(user_id, "")
 
+            open_b = expr.count("(")
+            close_b = expr.count(")")
+
+            if open_b > close_b:
+                expr += ")" * (open_b - close_b)
             if not check_brackets(expr):
                 bot.send_message(user_id, "скобки не сбалансированы")
                 return
