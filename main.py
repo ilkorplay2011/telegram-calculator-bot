@@ -1,8 +1,8 @@
 import telebot
 import os
+import re
 from dotenv import load_dotenv
 from calculator.normalize import normalize
-import re
 from calculator.engine import calculate
 from bot.keyboard import get_keyboard
 load_dotenv()
@@ -10,6 +10,17 @@ TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 user_data = {}
 user_screen = {}
+
+def check_brackets(expr):
+    stack = []
+    for c in expr:
+        if c == "(":
+            stack.append(c)
+        elif c == ")":
+            if not stack:
+                return False
+            stack.pop()
+    return len(stack) == 0
 
 def show_screen(user_id, chat_id):
     expr = user_data.get(user_id, "")
@@ -36,7 +47,7 @@ def calc_command(message):
 
 @bot.message_handler(commands=['help'])
 def help_command(message):
-    bot.send_message(message.chat.id,'вы можете начать работу либо с спомощью кнопок на экране,\nлибо самостоятельно набрав выражение пример:8+9^6')
+    bot.send_message(message.chat.id,'вы можете начать работу либо с помощью кнопок на экране,\nлибо самостоятельно набрав выражение пример:8+9^6')
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def calculator(message):
@@ -68,7 +79,7 @@ def calculator(message):
         return
 
     if text in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                "+", "-", "×", "÷", ",", "^",'k','m','b']:
+                "+", "-", "×", "÷", ",", "^",'k','m','b','(',')']:
         user_data[user_id] += text
         show_screen(user_id, message.chat.id)
         return
@@ -77,6 +88,9 @@ def calculator(message):
         try:
             expr = user_data.get(user_id, "")
 
+            if not check_brackets(expr):
+                bot.send_message(user_id, "скобки не сбалансированы")
+                return
             if not expr:
                 bot.send_message(user_id, "Пустое выражение")
                 return
@@ -105,6 +119,11 @@ def calculator(message):
             bot.send_message(user_id, "❌ неверное выражение")
             show_screen(user_id, message.chat.id)
             return
+
+        if not check_brackets(expr):
+            bot.send_message(user_id, "скобки не сбалансированы")
+            return
+
         user_data[user_id] = ""
         if expr.startswith(","):
             expr = "0" + expr
