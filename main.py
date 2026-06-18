@@ -1,12 +1,7 @@
-from unittest import result
-
 import telebot
 import os
-import re
 from dotenv import load_dotenv
-from calculator.normalize import normalize
 from bot.keyboard import get_keyboard
-from calculator.engine import check_brackets
 from calculator.engine import prepare
 from calculator.engine import calculate
 load_dotenv()
