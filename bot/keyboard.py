@@ -1,13 +1,52 @@
-import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 def get_keyboard():
-    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    row1 = [telebot.types.KeyboardButton("C"), telebot.types.KeyboardButton("7"), telebot.types.KeyboardButton("8"), telebot.types.KeyboardButton("9"), telebot.types.KeyboardButton("÷"), telebot.types.KeyboardButton("("), telebot.types.KeyboardButton(")")]
-    row2 = [telebot.types.KeyboardButton("4"), telebot.types.KeyboardButton("5"), telebot.types.KeyboardButton("6"), telebot.types.KeyboardButton("×"), telebot.types.KeyboardButton("k"), telebot.types.KeyboardButton("⌫")]
-    row3 = [telebot.types.KeyboardButton("1"), telebot.types.KeyboardButton("2"), telebot.types.KeyboardButton("3"), telebot.types.KeyboardButton("-"), telebot.types.KeyboardButton("m"), telebot.types.KeyboardButton("+/-")]
-    row4 = [telebot.types.KeyboardButton("0"), telebot.types.KeyboardButton(","), telebot.types.KeyboardButton("^"), telebot.types.KeyboardButton("="), telebot.types.KeyboardButton("+"),telebot.types.KeyboardButton("b")]
-    keyboard.add(*row1)
-    keyboard.add(*row2)
-    keyboard.add(*row3)
-    keyboard.add(*row4)
-    return keyboard
+    kb = InlineKeyboardMarkup()
+
+    kb.row(
+        InlineKeyboardButton("C", callback_data="C"),
+        InlineKeyboardButton("⌫", callback_data="BACK"),
+        InlineKeyboardButton("+/-", callback_data="NEG"),
+        InlineKeyboardButton("^", callback_data="^")
+    )
+
+    kb.row(
+        InlineKeyboardButton("7", callback_data="7"),
+        InlineKeyboardButton("8", callback_data="8"),
+        InlineKeyboardButton("9", callback_data="9"),
+        InlineKeyboardButton("÷", callback_data="÷")
+    )
+
+    kb.row(
+        InlineKeyboardButton("4", callback_data="4"),
+        InlineKeyboardButton("5", callback_data="5"),
+        InlineKeyboardButton("6", callback_data="6"),
+        InlineKeyboardButton("×", callback_data="×")
+    )
+
+    kb.row(
+        InlineKeyboardButton("1", callback_data="1"),
+        InlineKeyboardButton("2", callback_data="2"),
+        InlineKeyboardButton("3", callback_data="3"),
+        InlineKeyboardButton("-", callback_data="-")
+    )
+
+    kb.row(
+        InlineKeyboardButton("0", callback_data="0"),
+        InlineKeyboardButton("(", callback_data="("),
+        InlineKeyboardButton(")", callback_data=")"),
+        InlineKeyboardButton(",", callback_data=",")
+    )
+
+    kb.row(
+        InlineKeyboardButton("k", callback_data="k"),
+        InlineKeyboardButton("m", callback_data="m"),
+        InlineKeyboardButton("b", callback_data="b"),
+        InlineKeyboardButton("+", callback_data="+")
+    )
+
+    kb.row(
+        InlineKeyboardButton("=", callback_data="=")
+    )
+
+    return kb

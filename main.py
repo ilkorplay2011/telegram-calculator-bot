@@ -11,9 +11,9 @@ user_data = {}
 user_screen = {}
 
 def show_screen(user_id, chat_id):
-    expr = user_data.get(user_id, "")
-    text = f"🧮 {expr if expr else '0'}"
+    text = user_data.get(user_id, "") or "0"
 
+    # удаляем старый экран
     if user_id in user_screen:
         old_chat_id, old_msg_id = user_screen[user_id]
         try:
@@ -21,7 +21,12 @@ def show_screen(user_id, chat_id):
         except:
             pass
 
-    msg = bot.send_message(chat_id, text)
+    # создаём новый экран
+    msg = bot.send_message(
+        chat_id,
+        f"🧮 {text}",
+        reply_markup=get_keyboard()
+    )
 
     user_screen[user_id] = (chat_id, msg.message_id)
 
@@ -37,70 +42,47 @@ def calc_command(message):
 def help_command(message):
     bot.send_message(message.chat.id,'вы можете начать работу с помощью кнопок на экране введя комманду /calc')
 
-@bot.message_handler(func=lambda message: not message.text.startswith('/'))
-def calculator(message):
-    user_id = message.chat.id
-    text = message.text
+@bot.callback_query_handler(func=lambda call: True)
+def handler(call):
+    user_id = call.message.chat.id
+    data = call.data
+
     if user_id not in user_data:
         user_data[user_id] = ""
 
-    if text == "⌫":
-        expr = user_data.get(user_id, "")
-        if expr:
-            user_data[user_id] = expr[:-1]
-        show_screen(user_id, message.chat.id)
-        return
+    expr = user_data[user_id]
 
-    if text == 'C':
+    if data == "C":
         user_data[user_id] = ""
-        bot.send_message(message.chat.id, "🧹 очищено")
-        show_screen(user_id, message.chat.id)
+        show_screen(user_id, user_id)
         return
 
-    if text == "+/-":
-        if user_data[user_id]:
-            if user_data[user_id].startswith("-"):
-                user_data[user_id] = user_data[user_id][1:]
-            else:
-                user_data[user_id] = "-" + user_data[user_id]
-        show_screen(user_id, message.chat.id)
+    if data == "BACK":
+        user_data[user_id] = expr[:-1]
+        show_screen(user_id, user_id)
         return
 
-    if text in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                "+", "-", "×", "÷", ",", "^",'k','m','b','(',')']:
-        user_data[user_id] += text
-        show_screen(user_id, message.chat.id)
-        return
-
-    if text == "=":
+    if data == "=":
         try:
-            expr = user_data.get(user_id, "")
-
-            if not expr:
-                return
-
             expr = prepare(expr)
 
-            if expr is None:
-                bot.send_message(user_id, "ошибка выражения")
+            if not expr:
+                bot.send_message(user_id, "❌ ошибка")
                 return
 
             result = calculate(expr)
 
-            bot.send_message(user_id, f"🧮 Ответ: {result}")
-            user_data[user_id] = ""
-            show_screen(user_id, message.chat.id)
+            bot.send_message(user_id, f"🧮 {result}")
 
-        except ZeroDivisionError:
-            bot.send_message(
-                message.chat.id,
-                'Ошибка деления на ноль')
+            user_data[user_id] = ""
+            show_screen(user_id, user_id)
 
         except Exception:
-            bot.send_message(
-                message.chat.id,
-                "Ошибка"
-            )
+            bot.send_message(user_id, "❌ ошибка")
 
         return
+
+    user_data[user_id] += data
+    show_screen(user_id, user_id)
+
 bot.infinity_polling()
