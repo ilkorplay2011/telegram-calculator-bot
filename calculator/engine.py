@@ -37,13 +37,13 @@ def prepare(expr):
         return None
 
     expr = fix_brackets(expr)
-    if expr is None:
-        return None
 
-    if not check_brackets(expr):
+    if expr is None:
         return None
 
     return expr
 
 def calculate(expr):
+    if expr is None:
+        return "error"
     return simple_eval(expr)

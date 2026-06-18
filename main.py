@@ -35,7 +35,7 @@ def calc_command(message):
 
 @bot.message_handler(commands=['help'])
 def help_command(message):
-    bot.send_message(message.chat.id,'вы можете начать работу либо с помощью кнопок на экране')
+    bot.send_message(message.chat.id,'вы можете начать работу с помощью кнопок на экране введя комманду /calc')
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def calculator(message):
@@ -77,7 +77,6 @@ def calculator(message):
             expr = user_data.get(user_id, "")
 
             if not expr:
-                bot.send_message(user_id, "Пустое выражение")
                 return
 
             expr = prepare(expr)
