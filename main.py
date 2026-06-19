@@ -47,6 +47,11 @@ def handler(call):
     user_id = call.message.chat.id
     data = call.data
 
+    if data not in {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                    "+", "-", "×", "÷", "^", "(", ")", ",", "k", "m", "b",
+                    "=", "C", "BACK", "NEG"}:
+        return
+
     if user_id not in user_data:
         user_data[user_id] = ""
 
@@ -54,35 +59,50 @@ def handler(call):
 
     if data == "C":
         user_data[user_id] = ""
-        show_screen(user_id, user_id)
+        show_screen(user_id, call.message.chat.id)
         return
 
     if data == "BACK":
         user_data[user_id] = expr[:-1]
-        show_screen(user_id, user_id)
+        show_screen(user_id, call.message.chat.id)
+        return
+
+    if data == "NEG":
+        if user_data[user_id].startswith("-"):
+            user_data[user_id] = user_data[user_id][1:]
+        else:
+            user_data[user_id] = "-" + user_data[user_id]
+        show_screen(user_id, call.message.chat.id)
         return
 
     if data == "=":
         try:
-            expr = prepare(expr)
+            if not user_data[user_id]:
+                bot.send_message(user_id, "❌ пустое выражение")
+                return
+
+            expr = prepare(user_data[user_id])
 
             if not expr:
-                bot.send_message(user_id, "❌ ошибка")
+                bot.send_message(user_id, "❌ ошибка выражения")
                 return
 
             result = calculate(expr)
 
             bot.send_message(user_id, f"🧮 {result}")
-
             user_data[user_id] = ""
-            show_screen(user_id, user_id)
+            show_screen(user_id, call.message.chat.id)
+
+        except ZeroDivisionError:
+            bot.send_message(user_id,'Ошибка деления на ноль')
 
         except Exception:
             bot.send_message(user_id, "❌ ошибка")
 
+
         return
 
     user_data[user_id] += data
-    show_screen(user_id, user_id)
+    show_screen(user_id, call.message.chat.id)
 
 bot.infinity_polling()
